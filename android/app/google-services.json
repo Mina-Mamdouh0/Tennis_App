@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "609935719586",
+    "project_id": "tennis-app-6760a",
+    "storage_bucket": "tennis-app-6760a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:609935719586:android:33a783d44cb821bc362bfb",
+        "android_client_info": {
+          "package_name": "com.example.tennis_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "609935719586-oklreab0kattaf4t5qmb2octi5674spl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tennis_app",
+            "certificate_hash": "1c2064841bb40dabb12d9aa836cfe171e84a6b11"
+          }
+        },
+        {
+          "client_id": "609935719586-5nd56u86ahqvp7kmb3o8n15dd4uh3opj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ1_ROm0i6KSKopFhsg2PtJEF0bH3Jz98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "609935719586-5nd56u86ahqvp7kmb3o8n15dd4uh3opj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "609935719586-6668e5iodaenhed1qugfoo5fhmg11pj7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.tennisApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

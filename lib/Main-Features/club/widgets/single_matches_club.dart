@@ -1,0 +1,184 @@
+import 'package:carousel_slider/carousel_controller.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tennis_app/core/methodes/firebase_methodes.dart';
+import 'package:tennis_app/core/utils/widgets/no_data_text.dart';
+import 'package:tennis_app/models/single_match.dart';
+import '../../../core/utils/widgets/single_match_card copy.dart';
+import '../../../generated/l10n.dart';
+import '../../../models/player.dart';
+
+class ClubSingleMatches extends StatefulWidget {
+  const ClubSingleMatches({Key? key}) : super(key: key);
+
+  @override
+  State<ClubSingleMatches> createState() => _ClubSingleMatchesState();
+}
+
+class _ClubSingleMatchesState extends State<ClubSingleMatches> {
+  int selectedPageIndex = 0;
+  final CarouselController _carouselController = CarouselController();
+  List<String> matches = []; // List to store matches data
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMatches(); // Fetch matches data when the widget initializes
+  }
+
+  // Fetch the player data from Firestore and extract matches data
+  void _fetchMatches() async {
+    try {
+      // Fetch the current user's player data from Firestore
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('No user is currently signed in.');
+        return;
+      }
+
+      String currentUserId = currentUser.uid;
+
+      DocumentSnapshot<Map<String, dynamic>> playerSnapshot =
+          await FirebaseFirestore.instance
+              .collection('players')
+              .doc(currentUserId)
+              .get();
+
+      if (!playerSnapshot.exists) {
+        print('Player document does not exist for current user.');
+        return;
+      }
+
+      // Create a Player instance from the snapshot data
+      Player currentPlayer = Player.fromSnapshot(playerSnapshot);
+
+      Method methodes = Method();
+      final clubData =
+          await methodes.fetchClubData(currentPlayer.participatedClubId);
+// Get the matches data from the Club instance
+      matches = clubData.singleMatchesIds;
+
+      // Update the carousel with the fetched data
+      setState(() {});
+    } catch (error) {
+      print('Error fetching matches data: $error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    final double carouselHeight = (screenHeight + screenWidth) * 0.16;
+
+    return Column(
+      children: [
+        matches.isNotEmpty
+            ? Column(
+                children: [
+                  CarouselSlider(
+                    options: CarouselOptions(
+                      height: matches.isNotEmpty
+                          ? carouselHeight
+                          : 0, // Set height based on matches list
+                      aspectRatio: 16 / 9,
+                      viewportFraction: 0.7,
+                      initialPage: 0,
+                      enableInfiniteScroll: false,
+                      enlargeCenterPage: true,
+                    ),
+                    carouselController: _carouselController,
+                    items: matches.map((matchData) {
+                      return StreamBuilder<
+                          DocumentSnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('single_matches')
+                            .doc(matchData)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Text(
+                                S.of(context).Error_fetching_match_data);
+                          }
+
+                          if (!snapshot.hasData) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+
+                          final courtData = snapshot.data?.data();
+                          if (courtData == null) {
+                            return Center(
+                              child: SizedBox(
+                                child: NoData(
+                                  text: S.of(context).You_Dont_have_Matches,
+                                  buttonText:
+                                      S.of(context).Click_to_Find_Your_Partner,
+                                  onPressed: () {
+                                    GoRouter.of(context).push('/singleMatches');
+                                  },
+                                  height: screenHeight * .15,
+                                  width: screenWidth * .8,
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Create a Matches instance from the snapshot data
+                          final match =
+                              SingleMatch.fromFirestore(snapshot.data!);
+
+                          // Build the carousel item using the MatchItem widget
+                          return SingleMatchCard(match: match);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              )
+            : NoData(
+                text: S.of(context).You_Dont_have_Matches,
+                buttonText: S.of(context).Click_to_Find_Your_Partner,
+                onPressed: () {
+                  GoRouter.of(context).push('/singleMatches');
+                },
+                height: screenHeight * .15,
+                width: screenWidth * .8,
+              ),
+
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: buildPageIndicator(matches.length),
+        ), // Add the smooth page indicator
+      ],
+    );
+  }
+
+  Widget buildPageIndicator(int itemCount) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        itemCount,
+        (index) {
+          final bool isSelected = selectedPageIndex == index;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: isSelected ? 11 : 9,
+            height: isSelected ? 11 : 9,
+            margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.011),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected ? Colors.black : Colors.grey,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
